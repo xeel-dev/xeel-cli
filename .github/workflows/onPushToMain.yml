@@ -16,8 +16,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - name: Authenticate with private NPM package
-        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
       - run: pnpm install
       - run: pnpm test
       - run: pnpm build
