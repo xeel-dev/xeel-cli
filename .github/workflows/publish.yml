@@ -1,14 +1,16 @@
-name: Build, Test, Run & Publish
+name: Run & Publish
 permissions:
   contents: read
   id-token: write
 on:
   push:
     branches: [main]
-  workflow_dispatch:
 jobs:
-  build-and-run:
+  build-and-test:
+    uses: ./.github/workflows/build.yml
+  run-and-publish:
     runs-on: 'ubuntu-latest'
+    needs: build-and-test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -17,7 +19,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install
-      - run: pnpm test
       - run: pnpm build
       - run: ./bin/run.js plugins install @xeel-dev/cli-npm-plugin
       - run: ./bin/run.js dependency-debt report --auth github --organization "x::org:64jlQszyh97h4u4d0IGc7J" --repository "$GITHUB_REPOSITORY_ID"
