@@ -1,0 +1,28 @@
+name: Report to Xeel
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '45 8 * * *'
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  dependency-debt:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'pnpm'
+      - run: pnpm install
+      - uses: xeel-dev/report-action@v0.0.2-alpha.4
+        with:
+          organization: 'x::org:64jlQszyh97h4u4d0IGc7J'
+        env:
+          XEEL_API: 'https://api.xeel-dev.com' # Use the development API
+          XEEL_APP: 'https://app.xeel-dev.com' # Use the development APP

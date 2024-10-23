@@ -1,5 +1,13 @@
 # Xeel CLI
 
+<div style="text-align: center;">
+  <strong>
+    <a href="https://xeel.dev">Xeel</a>
+     | 
+    <a href="https://docs.xeel.dev">Documentation</a>
+  </strong>
+</div>
+
 The Xeel CLI enables interfacing with Xeel's backend.
 
 Only dependency debt is currently supported.
