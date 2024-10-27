@@ -76,6 +76,10 @@ export default class XeelReporter extends Reporter {
       },
       {} as Record<string, EcosystemSupport<string>>,
     );
+    if (rootProjects.length === 0) {
+      console.log('No projects found');
+      return;
+    }
     // In order to find 'the one true root project', aka the project that
     // we are going to link to the repository ID and hang all the other
     // projects off of, we need to find the project with the path that is
