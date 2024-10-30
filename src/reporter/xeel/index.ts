@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import type { EcosystemSupport } from '../../ecosystems/index.js';
 import { Reporter } from '../index.js';
 import GitHubAuthProvider from './auth-providers/github.js';
+import { NoOpAuthProvider } from './auth-providers/index.js';
 import XeelAuthProvider from './auth-providers/xeel.js';
 import { DebtAPI } from './graphql/apis/debt.js';
 import { ProjectAPI } from './graphql/apis/project.js';
@@ -47,6 +48,14 @@ export default class XeelReporter extends Reporter {
 
   private getAuthProvider(flags: unknown) {
     const selectedProvider = (flags as { auth: string }).auth;
+    if (selectedProvider === 'none') {
+      const repositoryId = (flags as { repository: string }).repository;
+      // Check if the repository ID provided is a GitHub repository URL
+      // If so, this is a public repository and we can skip authentication
+      if (repositoryId.includes('github.com/')) {
+        return new NoOpAuthProvider();
+      }
+    }
     switch (selectedProvider) {
       case 'github':
         return new GitHubAuthProvider(
