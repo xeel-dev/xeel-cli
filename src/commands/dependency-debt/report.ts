@@ -24,7 +24,7 @@ export default class ReportDebt extends Command {
     auth: Flags.string({
       char: 'a',
       description: 'Authentication provider to use for Xeel API',
-      options: ['github', 'xeel'],
+      options: ['github', 'xeel', 'none'],
       default: 'xeel',
     }),
   };
