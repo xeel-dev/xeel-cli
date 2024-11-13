@@ -1,5 +1,9 @@
 import chalk from 'chalk';
-import type { EcosystemSupport } from '../../ecosystems/index.js';
+import type {
+  EcosystemSupport,
+  Project,
+  RootProject,
+} from '../../ecosystems/index.js';
 import { Reporter } from '../index.js';
 import GitHubAuthProvider from './auth-providers/github.js';
 import { NoOpAuthProvider } from './auth-providers/index.js';
@@ -24,6 +28,10 @@ export default class XeelReporter extends Reporter {
     this.clientFactory = new XeelGraphQLClientFactory(
       this.getAuthProvider(flags),
     );
+    if (process.env.NO_COLOR || process.env.CI) {
+      console.log('Disabling color output…');
+      chalk.level = 0;
+    }
   }
 
   public async init() {
@@ -73,11 +81,18 @@ export default class XeelReporter extends Reporter {
     if (!this.repositoryId) {
       throw new Error('Repository ID is not set');
     }
-    const rootProjects = (
-      await Promise.all(
-        this.ecosystems.map((ecosystem) => ecosystem.findProjects()),
-      )
-    ).flat();
+    const findResults = await Promise.allSettled(
+      this.ecosystems.map((ecosystem) => ecosystem.findProjects()),
+    );
+    const rootProjects = findResults.reduce((acc, result) => {
+      if (result.status === 'fulfilled') {
+        acc.push(...result.value);
+      }
+      if (result.status === 'rejected') {
+        console.error('Failed to find projects', result.reason);
+      }
+      return acc;
+    }, [] as RootProject<string>[]);
     const ecosystemByName = this.ecosystems.reduce(
       (acc, ecosystem) => {
         acc[ecosystem.name] = ecosystem;
@@ -119,65 +134,97 @@ export default class XeelReporter extends Reporter {
     }
     const projectApi = new ProjectAPI(client);
     const debtApi = new DebtAPI(client);
-
-    const rootProjectId = await projectApi.upsertProjectByRepository(
-      this.repositoryId,
-      rootProject.name,
-      rootProject.description,
-    );
-    const rootProjectDependencies =
-      await ecosystemByName[rootProject.ecosystem].listOutdatedDependencies(
-        rootProject,
-      );
-    console.log(
-      `Root project ${chalk.underline(rootProject.name)} has ${chalk.inverse(rootProjectDependencies.length)} outdated dependencies`,
-    );
-    await debtApi.upsertDebt(rootProjectId, rootProjectDependencies);
-    for (const subProject of rootProject.subProjects ?? []) {
-      const subProjectId = await projectApi.upsertProjectByParentProjectId(
-        rootProjectId,
-        subProject.name,
-        subProject.description,
-      );
-      const subProjectDependencies =
-        await ecosystemByName[subProject.ecosystem].listOutdatedDependencies(
-          subProject,
+    try {
+      const rootProjectDependencies =
+        await ecosystemByName[rootProject.ecosystem].listOutdatedDependencies(
+          rootProject,
         );
       console.log(
-        `Subproject ${chalk.underline(subProject.name)} has ${chalk.inverse(subProjectDependencies.length)} outdated dependencies`,
+        `Root project ${chalk.underline(rootProject.name)} has ${chalk.inverse(rootProjectDependencies.length)} outdated dependencies`,
       );
-      await debtApi.upsertDebt(subProjectId, subProjectDependencies);
-    }
 
-    for (const project of rootProjects) {
-      if (project === rootProject) {
-        continue;
-      }
-      const parentProjectId = await projectApi.upsertProjectByParentProjectId(
-        rootProjectId,
-        project.name,
-        project.description,
+      const rootProjectId = await projectApi.upsertProjectByRepository(
+        this.repositoryId,
+        rootProject.name,
+        rootProject.description,
       );
-      const dependencies =
-        await ecosystemByName[project.ecosystem].listOutdatedDependencies(
-          project,
-        );
-      await debtApi.upsertDebt(parentProjectId, dependencies);
-      for (const subProject of project.subProjects ?? []) {
-        const subProjectId = await projectApi.upsertProjectByParentProjectId(
-          parentProjectId,
-          subProject.name,
-          subProject.description,
-        );
-        const subProjectDependencies =
-          await ecosystemByName[subProject.ecosystem].listOutdatedDependencies(
-            subProject,
+      await debtApi.upsertDebt(rootProjectId, rootProjectDependencies);
+
+      for (const subProject of rootProject.subProjects ?? []) {
+        try {
+          const subProjectDependencies =
+            await ecosystemByName[
+              subProject.ecosystem
+            ].listOutdatedDependencies(subProject);
+          console.log(
+            `Subproject ${chalk.underline(subProject.name)} has ${chalk.inverse(subProjectDependencies.length)} outdated dependencies`,
           );
-        console.log(
-          `Subproject ${chalk.underline(subProject.name)} has ${chalk.inverse(subProjectDependencies.length)} outdated dependencies`,
-        );
-        await debtApi.upsertDebt(subProjectId, subProjectDependencies);
+          const subProjectId = await projectApi.upsertProjectByParentProjectId(
+            rootProjectId,
+            subProject.name,
+            subProject.description,
+          );
+          await debtApi.upsertDebt(subProjectId, subProjectDependencies);
+        } catch (error) {
+          this.logError(subProject, error);
+        }
       }
+
+      for (const project of rootProjects) {
+        if (project === rootProject) {
+          continue;
+        }
+        try {
+          const dependencies =
+            await ecosystemByName[project.ecosystem].listOutdatedDependencies(
+              project,
+            );
+          const parentProjectId =
+            await projectApi.upsertProjectByParentProjectId(
+              rootProjectId,
+              project.name,
+              project.description,
+            );
+          console.log(
+            `Project ${chalk.underline(project.name)} has ${chalk.inverse(dependencies.length)} outdated dependencies`,
+          );
+          await debtApi.upsertDebt(parentProjectId, dependencies);
+          for (const subProject of project.subProjects ?? []) {
+            try {
+              const subProjectDependencies =
+                await ecosystemByName[
+                  subProject.ecosystem
+                ].listOutdatedDependencies(subProject);
+              console.log(
+                `Subproject ${chalk.underline(subProject.name)} has ${chalk.inverse(subProjectDependencies.length)} outdated dependencies`,
+              );
+
+              const subProjectId =
+                await projectApi.upsertProjectByParentProjectId(
+                  parentProjectId,
+                  subProject.name,
+                  subProject.description,
+                );
+
+              await debtApi.upsertDebt(subProjectId, subProjectDependencies);
+            } catch (error) {
+              this.logError(subProject, error);
+            }
+          }
+        } catch (error) {
+          this.logError(project, error);
+        }
+      }
+    } catch (error) {
+      this.logError(rootProject, error);
     }
+  }
+
+  private logError(subProject: Project<string>, error: unknown) {
+    console.error('Failed to report dependency debt', {
+      project: subProject.name,
+      ecosystem: subProject.ecosystem,
+      error,
+    });
   }
 }
