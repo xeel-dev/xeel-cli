@@ -106,7 +106,7 @@ export class GitHubProvider implements GitProvider {
 
   public async getRepositoryId(remoteUrl: string) {
     let repositoryId: string | undefined;
-    const match = remoteUrl.match(/github\.com\/([^/]+)\/([^/]+)\.git/);
+    const match = remoteUrl.match(/github\.com\/([^/]+)\/([^/]+)(?:\.git)?/);
     if (!match) {
       throw new Error('Invalid GitHub repository URL');
     }
