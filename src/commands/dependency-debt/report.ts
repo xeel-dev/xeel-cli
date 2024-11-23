@@ -1,5 +1,6 @@
 import { Command, Flags } from '@oclif/core';
 import { EcosystemSupport } from '../../ecosystems/index.js';
+import { ReportSummary } from '../../reporter/index.js';
 import XeelReporter from '../../reporter/xeel/index.js';
 
 export default class ReportDebt extends Command {
@@ -27,7 +28,44 @@ export default class ReportDebt extends Command {
       options: ['github', 'xeel', 'none'],
       default: 'xeel',
     }),
+    verbose: Flags.boolean({
+      char: 'v',
+      description: 'Print verbose output',
+      default: process.env.DEBUG ? true : false,
+    }),
   };
+
+  private processSummary(summary: ReportSummary, isVerbose: boolean): void {
+    const errors = new Map<string, string[]>();
+    const warnings = new Map<string, string[]>();
+    for (const log of summary.errors) {
+      errors.set(log.message, [
+        ...(errors.get(log.message) ?? []),
+        log.details ?? '',
+      ]);
+    }
+    for (const log of summary.warnings) {
+      warnings.set(log.message, [
+        ...(warnings.get(log.message) ?? []),
+        log.details ?? '',
+      ]);
+    }
+    for (const [message, details] of errors) {
+      console.error(`❌ ${message}`);
+      if (isVerbose) {
+        console.error(details.join('\n'));
+      }
+    }
+    for (const [message, details] of warnings) {
+      console.warn(`⚠️ ${message}`);
+      if (isVerbose) {
+        console.warn(details.join('\n'));
+      }
+    }
+    if (!summary.success) {
+      throw new Error('Dependency debt report failed');
+    }
+  }
 
   public async run(): Promise<void> {
     const { flags } = await this.parse(ReportDebt);
@@ -40,7 +78,8 @@ export default class ReportDebt extends Command {
     );
     try {
       const reporter = new XeelReporter(flags, ecosystems);
-      await reporter.reportDependencyDebt();
+      const debtSummary = await reporter.reportDependencyDebt();
+      this.processSummary(debtSummary, flags.verbose);
     } catch (error) {
       console.error(error);
       process.exit(1);
