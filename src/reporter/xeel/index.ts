@@ -4,7 +4,7 @@ import type {
   Project,
   RootProject,
 } from '../../ecosystems/index.js';
-import { Reporter } from '../index.js';
+import { Reporter, ReportSummary } from '../index.js';
 import GitHubAuthProvider from './auth-providers/github.js';
 import { NoOpAuthProvider } from './auth-providers/index.js';
 import XeelAuthProvider from './auth-providers/xeel.js';
@@ -17,11 +17,9 @@ export default class XeelReporter extends Reporter {
   private clientFactory: XeelGraphQLClientFactory;
   private repositoryId?: string;
   private isReady: Promise<void>;
+
   constructor(flags: unknown, ecosystems: EcosystemSupport<string>[]) {
     super(flags, ecosystems);
-    if (typeof flags !== 'object' || !flags) {
-      throw new Error('Flags must be an object');
-    }
     this.isReady = this.getRepositoryId(flags).then((repositoryId) => {
       this.repositoryId = repositoryId;
     });
@@ -78,6 +76,11 @@ export default class XeelReporter extends Reporter {
 
   async reportDependencyDebt() {
     await this.isReady;
+    const summary: ReportSummary = {
+      errors: [],
+      warnings: [],
+      success: true,
+    };
     if (!this.repositoryId) {
       throw new Error('Repository ID is not set');
     }
@@ -89,7 +92,10 @@ export default class XeelReporter extends Reporter {
         acc.push(...result.value);
       }
       if (result.status === 'rejected') {
-        console.error('Failed to find projects', result.reason);
+        summary.errors.push({
+          message: 'Failed to find projects',
+          details: result.reason,
+        });
       }
       return acc;
     }, [] as RootProject<string>[]);
@@ -101,8 +107,11 @@ export default class XeelReporter extends Reporter {
       {} as Record<string, EcosystemSupport<string>>,
     );
     if (rootProjects.length === 0) {
-      console.log('No projects found');
-      return;
+      summary.warnings.push({
+        message: 'No projects found',
+      });
+      summary.success = false;
+      return summary;
     }
     // In order to find 'the one true root project', aka the project that
     // we are going to link to the repository ID and hang all the other
@@ -123,7 +132,11 @@ export default class XeelReporter extends Reporter {
       return acc;
     });
     if (!rootProject) {
-      return;
+      summary.errors.push({
+        message: 'Failed to find root project',
+      });
+      summary.success = false;
+      return summary;
     }
     console.log(
       `Using root project: ${chalk.underline(rootProject.name)} at ${rootProject.path}`,
@@ -166,6 +179,10 @@ export default class XeelReporter extends Reporter {
           );
           await debtApi.upsertDebt(subProjectId, subProjectDependencies);
         } catch (error) {
+          summary.errors.push({
+            message: 'Failed to report dependency debt',
+            details: JSON.stringify(error),
+          });
           this.logError(subProject, error);
         }
       }
@@ -208,23 +225,38 @@ export default class XeelReporter extends Reporter {
 
               await debtApi.upsertDebt(subProjectId, subProjectDependencies);
             } catch (error) {
+              summary.errors.push({
+                message: 'Failed to report dependency debt',
+                details: JSON.stringify(error),
+              });
               this.logError(subProject, error);
             }
           }
         } catch (error) {
+          summary.errors.push({
+            message: 'Failed to report dependency debt',
+            details: JSON.stringify(error),
+          });
           this.logError(project, error);
         }
       }
     } catch (error) {
+      summary.errors.push({
+        message: 'Failed to report dependency debt',
+        details: JSON.stringify(error),
+      });
       this.logError(rootProject, error);
     }
+    return summary;
   }
 
   private logError(subProject: Project<string>, error: unknown) {
-    console.error('Failed to report dependency debt', {
-      project: subProject.name,
-      ecosystem: subProject.ecosystem,
-      error,
-    });
+    if (this.isVerbose) {
+      console.error('Failed to report dependency debt', {
+        project: subProject.name,
+        ecosystem: subProject.ecosystem,
+        error,
+      });
+    }
   }
 }
