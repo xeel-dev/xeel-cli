@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/xeel-dev/xeel-cli/compare/v1.0.2...v1.0.3) (2024-11-24)
+
+
+### Bug Fixes
+
+* fixes Discord release link ([85927f4](https://github.com/xeel-dev/xeel-cli/commit/85927f495f18abc90dfc46d7ac4a098141b7e72a))
+
 ## [1.0.2](https://github.com/xeel-dev/xeel-cli/compare/v1.0.1...v1.0.2) (2024-11-24)
 
 
