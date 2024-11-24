@@ -15,6 +15,11 @@ export default class ReportAll extends Command {
       options: ['github', 'xeel'],
       default: 'xeel',
     }),
+    verbose: Flags.boolean({
+      char: 'v',
+      description: 'Print verbose output',
+      default: process.env.DEBUG ? true : false,
+    }),
   };
 
   public async run(): Promise<void> {
