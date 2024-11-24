@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/xeel-dev/xeel-cli/compare/v1.0.0...v1.0.1) (2024-11-24)
+
+
+### Bug Fixes
+
+* fix release-please, remove old publish workflow ([a55ad6e](https://github.com/xeel-dev/xeel-cli/commit/a55ad6eb22a204eb848a333857ad45cc302fc7cf))
+
 ## 1.0.0 (2024-11-24)
 
 
