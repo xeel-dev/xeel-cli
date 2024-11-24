@@ -63,7 +63,7 @@ export default class ReportDebt extends Command {
       }
     }
     if (!summary.success) {
-      throw new Error('Dependency debt report failed');
+      throw new Error('Version debt report failed');
     }
   }
 

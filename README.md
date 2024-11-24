@@ -10,7 +10,7 @@
 
 The Xeel CLI enables interfacing with Xeel's backend.
 
-Only dependency debt is currently supported.
+Only version debt is currently supported.
 
 ## Getting started
 

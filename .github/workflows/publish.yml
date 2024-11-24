@@ -24,7 +24,7 @@ jobs:
       - run: pnpm build
       - run: ./bin/run.js plugins install @xeel-dev/cli-npm-plugin
       - run: ./bin/run.js plugins install @xeel-dev/cli-docker-plugin
-      - run: ./bin/run.js dependency-debt report --auth github --organization "x::org:64jlQszyh97h4u4d0IGc7J" --repository "$GITHUB_REPOSITORY_ID"
+      - run: ./bin/run.js version-debt report --auth github --organization "x::org:64jlQszyh97h4u4d0IGc7J" --repository "$GITHUB_REPOSITORY_ID"
         env:
           XEEL_API: 'https://api.xeel-dev.com' # Use the development API
           XEEL_APP: 'https://app.xeel-dev.com' # Use the development APP
