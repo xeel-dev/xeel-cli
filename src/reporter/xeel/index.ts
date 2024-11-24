@@ -180,7 +180,7 @@ export default class XeelReporter extends Reporter {
           await debtApi.upsertDebt(subProjectId, subProjectDependencies);
         } catch (error) {
           summary.errors.push({
-            message: 'Failed to report dependency debt',
+            message: 'Failed to report version debt',
             details: JSON.stringify(error),
           });
           this.logError(subProject, error);
@@ -226,7 +226,7 @@ export default class XeelReporter extends Reporter {
               await debtApi.upsertDebt(subProjectId, subProjectDependencies);
             } catch (error) {
               summary.errors.push({
-                message: 'Failed to report dependency debt',
+                message: 'Failed to report version debt',
                 details: JSON.stringify(error),
               });
               this.logError(subProject, error);
@@ -234,7 +234,7 @@ export default class XeelReporter extends Reporter {
           }
         } catch (error) {
           summary.errors.push({
-            message: 'Failed to report dependency debt',
+            message: 'Failed to report version debt',
             details: JSON.stringify(error),
           });
           this.logError(project, error);
@@ -242,7 +242,7 @@ export default class XeelReporter extends Reporter {
       }
     } catch (error) {
       summary.errors.push({
-        message: 'Failed to report dependency debt',
+        message: 'Failed to report version debt',
         details: JSON.stringify(error),
       });
       this.logError(rootProject, error);
@@ -252,7 +252,7 @@ export default class XeelReporter extends Reporter {
 
   private logError(subProject: Project<string>, error: unknown) {
     if (this.isVerbose) {
-      console.error('Failed to report dependency debt', {
+      console.error('Failed to report version debt', {
         project: subProject.name,
         ecosystem: subProject.ecosystem,
         error,
