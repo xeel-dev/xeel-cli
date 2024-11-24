@@ -30,7 +30,8 @@
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "oclif manifest",
     "start": "./bin/dev.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "husky"
   },
   "engines": {
     "node": "20"
@@ -40,6 +41,8 @@
     "@oclif/prettier-config": "^0.2.1",
     "@types/node": "20",
     "@vitest/coverage-v8": "^2.1.5",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
     "shx": "^0.3.4",
@@ -73,5 +76,10 @@
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
