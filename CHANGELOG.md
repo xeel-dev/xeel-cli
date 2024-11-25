@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/xeel-dev/xeel-cli/compare/v1.0.3...v1.0.4) (2024-11-25)
+
+
+### Bug Fixes
+
+* **githubprovider:** fixes resolving a repository slug with a .git suffix ([f80d227](https://github.com/xeel-dev/xeel-cli/commit/f80d2272bad45365aaed15a42848910b72aad7ca))
+
 ## [1.0.3](https://github.com/xeel-dev/xeel-cli/compare/v1.0.2...v1.0.3) (2024-11-24)
 
 
