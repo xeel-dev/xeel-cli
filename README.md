@@ -52,3 +52,4 @@ npx xeel plugins install $PLUGIN_NAME
 
 - [`@xeel-dev/cli-docker-plugin`](https://github.com/xeel-dev/cli-docker-plugin)
 - [`@xeel-dev/cli-npm-plugin`](https://github.com/xeel-dev/cli-npm-plugin)
+- [`@xeel-dev/cli-python-plugin`](https://github.com/xeel-dev/cli-python-plugin)
