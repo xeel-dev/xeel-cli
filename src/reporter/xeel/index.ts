@@ -148,10 +148,10 @@ export default class XeelReporter extends Reporter {
     const projectApi = new ProjectAPI(client);
     const debtApi = new DebtAPI(client);
     try {
+      const ecosystem = ecosystemByName[rootProject.ecosystem];
       const rootProjectDependencies =
-        await ecosystemByName[rootProject.ecosystem].listOutdatedDependencies(
-          rootProject,
-        );
+        await ecosystem.listOutdatedDependencies(rootProject);
+
       console.log(
         `Root project ${chalk.underline(rootProject.name)} has ${chalk.inverse(rootProjectDependencies.length)} outdated dependencies`,
       );
@@ -161,14 +161,21 @@ export default class XeelReporter extends Reporter {
         rootProject.name,
         rootProject.description,
       );
-      await debtApi.upsertDebt(rootProjectId, rootProjectDependencies);
+      let totalDependencies = undefined;
+      if (ecosystem.countDependencies) {
+        totalDependencies = await ecosystem.countDependencies(rootProject);
+      }
+      await debtApi.upsertDebt(
+        rootProjectId,
+        rootProjectDependencies,
+        totalDependencies,
+      );
 
       for (const subProject of rootProject.subProjects ?? []) {
         try {
+          const ecosystem = ecosystemByName[subProject.ecosystem];
           const subProjectDependencies =
-            await ecosystemByName[
-              subProject.ecosystem
-            ].listOutdatedDependencies(subProject);
+            await ecosystem.listOutdatedDependencies(subProject);
           console.log(
             `Subproject ${chalk.underline(subProject.name)} has ${chalk.inverse(subProjectDependencies.length)} outdated dependencies`,
           );
@@ -177,7 +184,15 @@ export default class XeelReporter extends Reporter {
             subProject.name,
             subProject.description,
           );
-          await debtApi.upsertDebt(subProjectId, subProjectDependencies);
+          let totalDependencies = undefined;
+          if (ecosystem.countDependencies) {
+            totalDependencies = await ecosystem.countDependencies(subProject);
+          }
+          await debtApi.upsertDebt(
+            subProjectId,
+            subProjectDependencies,
+            totalDependencies,
+          );
         } catch (error) {
           summary.errors.push({
             message: 'Failed to report version debt',
@@ -192,10 +207,9 @@ export default class XeelReporter extends Reporter {
           continue;
         }
         try {
+          const ecosystem = ecosystemByName[project.ecosystem];
           const dependencies =
-            await ecosystemByName[project.ecosystem].listOutdatedDependencies(
-              project,
-            );
+            await ecosystem.listOutdatedDependencies(project);
           const parentProjectId =
             await projectApi.upsertProjectByParentProjectId(
               rootProjectId,
@@ -205,13 +219,20 @@ export default class XeelReporter extends Reporter {
           console.log(
             `Project ${chalk.underline(project.name)} has ${chalk.inverse(dependencies.length)} outdated dependencies`,
           );
-          await debtApi.upsertDebt(parentProjectId, dependencies);
+          let totalDependencies = undefined;
+          if (ecosystem.countDependencies) {
+            totalDependencies = await ecosystem.countDependencies(project);
+          }
+          await debtApi.upsertDebt(
+            parentProjectId,
+            dependencies,
+            totalDependencies,
+          );
           for (const subProject of project.subProjects ?? []) {
             try {
+              const ecosystem = ecosystemByName[subProject.ecosystem];
               const subProjectDependencies =
-                await ecosystemByName[
-                  subProject.ecosystem
-                ].listOutdatedDependencies(subProject);
+                await ecosystem.listOutdatedDependencies(subProject);
               console.log(
                 `Subproject ${chalk.underline(subProject.name)} has ${chalk.inverse(subProjectDependencies.length)} outdated dependencies`,
               );
@@ -223,7 +244,16 @@ export default class XeelReporter extends Reporter {
                   subProject.description,
                 );
 
-              await debtApi.upsertDebt(subProjectId, subProjectDependencies);
+              let totalDependencies = undefined;
+              if (ecosystem.countDependencies) {
+                totalDependencies =
+                  await ecosystem.countDependencies(subProject);
+              }
+              await debtApi.upsertDebt(
+                subProjectId,
+                subProjectDependencies,
+                totalDependencies,
+              );
             } catch (error) {
               summary.errors.push({
                 message: 'Failed to report version debt',

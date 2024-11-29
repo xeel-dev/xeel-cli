@@ -81,4 +81,10 @@ export interface EcosystemSupport<T extends string> {
    * List all outdated dependencies for a project.
    */
   listOutdatedDependencies(project: Project<T>): Promise<Dependency<T>[]>;
+  /**
+   * Get the count of dependencies for a project.
+   *
+   * @since 1.1.0
+   */
+  countDependencies?(project: Project<T>): Promise<number>;
 }
