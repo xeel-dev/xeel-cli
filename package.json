@@ -1,6 +1,6 @@
 {
   "name": "@xeel-dev/cli",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Xeel Command Line Interface",
   "license": "MIT",
   "bugs": "https://github.com/xeel-dev/xeel-cli/issues",

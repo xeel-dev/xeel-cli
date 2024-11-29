@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/xeel-dev/xeel-cli/compare/v1.0.4...v1.1.0) (2024-11-29)
+
+
+### Features
+
+* **version-debt:** add `totalDependencies` to version debt reporting ([3334ef9](https://github.com/xeel-dev/xeel-cli/commit/3334ef905cc28265337b1b1ba72637da6d090b93))
+
 ## [1.0.4](https://github.com/xeel-dev/xeel-cli/compare/v1.0.3...v1.0.4) (2024-11-25)
 
 
