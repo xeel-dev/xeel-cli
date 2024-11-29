@@ -3,17 +3,29 @@ import { Dependency } from '../../../../ecosystems/index.js';
 import { GraphQLAPI } from './index.js';
 
 export class DebtAPI extends GraphQLAPI {
-  async upsertDebt(id: string, dependencies: Dependency<string>[]) {
+  async upsertDebt(
+    id: string,
+    dependencies: Dependency<string>[],
+    totalDependencies?: number,
+  ) {
     const document = gql`
-      mutation UpsertDebt($id: ID!, $dependencies: [InputDependency]!) {
-        upsertDependencyDebt(projectId: $id, dependencies: $dependencies) {
+      mutation UpsertDebt(
+        $id: ID!
+        $dependencies: [InputDependency]!
+        $totalDependencies: Int
+      ) {
+        upsertDependencyDebt(
+          projectId: $id
+          dependencies: $dependencies
+          totalDependencies: $totalDependencies
+        ) {
           debtScore
         }
       }
     `;
     const response = await this.client.request<{
       upsertDependencyDebt: { debtScore: number };
-    }>(document, { id, dependencies });
+    }>(document, { id, dependencies, totalDependencies });
     const { debtScore } = response.upsertDependencyDebt;
     return debtScore;
   }
